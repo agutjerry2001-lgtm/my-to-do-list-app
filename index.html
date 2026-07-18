@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Notes — Task Notebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient page texture -->
+  <div class="page-texture" aria-hidden="true"></div>
+
+  <!-- Confetti layer for the "all tasks done" celebration -->
+  <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+  <div class="app-shell">
+
+    <!-- Spiral binding, the signature element -->
+    <div class="spiral" aria-hidden="true"></div>
+
+    <main class="notebook" role="main">
+
+      <!-- Header -->
+      <header class="nb-header">
+        <div class="nb-header-top">
+          <div>
+            <p class="eyebrow">Kept daily, since today</p>
+            <h1 class="nb-title">Field Notes</h1>
+          </div>
+          <div class="header-controls">
+            <div class="accent-picker" id="accentPicker" role="group" aria-label="Accent color">
+              <button class="accent-dot" data-accent="ink" aria-label="Ink accent" title="Ink"></button>
+              <button class="accent-dot" data-accent="moss" aria-label="Moss accent" title="Moss"></button>
+              <button class="accent-dot" data-accent="denim" aria-label="Denim accent" title="Denim"></button>
+              <button class="accent-dot" data-accent="plum" aria-label="Plum accent" title="Plum"></button>
+            </div>
+            <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle light / dark mode">
+              <svg id="iconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+              <svg id="iconMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stat line -->
+        <div class="stat-line" role="status" aria-live="polite">
+          <div class="stat"><span id="statTotal">0</span><label>total</label></div>
+          <div class="stat-divider">/</div>
+          <div class="stat"><span id="statActive">0</span><label>open</label></div>
+          <div class="stat-divider">/</div>
+          <div class="stat"><span id="statDone">0</span><label>closed</label></div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <!-- Due-today reminder banner -->
+        <div class="reminder-banner" id="reminderBanner" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span id="reminderText"></span>
+          <button id="reminderDismiss" class="icon-btn small" type="button" aria-label="Dismiss reminder">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Add task -->
+      <section class="add-row" aria-label="Add a task">
+        <input type="text" id="taskInput" class="ruled-input" placeholder="Write today's task…" maxlength="120" autocomplete="off">
+        <button id="expandFormBtn" class="icon-btn ghost" type="button" title="Add details" aria-expanded="false" aria-controls="detailForm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button id="addTaskBtn" class="btn-primary" type="button">Add</button>
+      </section>
+
+      <!-- Expandable detail form -->
+      <section class="detail-form" id="detailForm" hidden>
+        <textarea id="taskDesc" class="ruled-textarea" placeholder="Optional description…" maxlength="300" rows="2"></textarea>
+        <div class="detail-grid">
+          <label class="field">
+            <span>Due date</span>
+            <input type="date" id="taskDue">
+          </label>
+          <label class="field">
+            <span>Priority</span>
+            <select id="taskPriority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Category</span>
+            <select id="taskCategory">
+              <option value="general">General</option>
+              <option value="work">Work</option>
+              <option value="school">School</option>
+              <option value="personal">Personal</option>
+              <option value="shopping">Shopping</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <!-- Search -->
+      <section class="search-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Search tasks…" autocomplete="off">
+      </section>
+
+      <!-- Filter tabs (notebook page tabs) -->
+      <nav class="tabs" id="filterTabs" aria-label="Filter tasks">
+        <button class="tab active" data-filter="all" type="button">All</button>
+        <button class="tab" data-filter="active" type="button">Active</button>
+        <button class="tab" data-filter="completed" type="button">Done</button>
+        <button class="tab" data-filter="high" type="button">High</button>
+        <button class="tab" data-filter="medium" type="button">Medium</button>
+        <button class="tab" data-filter="low" type="button">Low</button>
+      </nav>
+
+      <!-- Sort + category + bulk actions + import/export -->
+      <div class="toolbar">
+        <div class="toolbar-selects">
+          <label class="field inline">
+            <span>Sort by</span>
+            <select id="sortSelect">
+              <option value="created">Date created</option>
+              <option value="due">Due date</option>
+              <option value="alpha">Alphabetically</option>
+              <option value="priority">Priority</option>
+            </select>
+          </label>
+          <label class="field inline">
+            <span>Category</span>
+            <select id="categoryFilter">
+              <option value="all">All</option>
+              <option value="general">General</option>
+              <option value="work">Work</option>
+              <option value="school">School</option>
+              <option value="personal">Personal</option>
+              <option value="shopping">Shopping</option>
+            </select>
+          </label>
+        </div>
+        <div class="toolbar-actions">
+          <button id="markAllBtn" class="text-btn" type="button">Mark all done</button>
+          <button id="clearCompletedBtn" class="text-btn" type="button">Clear completed</button>
+          <button id="exportBtn" class="text-btn" type="button">Export</button>
+          <button id="importBtn" class="text-btn" type="button">Import</button>
+          <input type="file" id="importFile" accept="application/json" hidden>
+        </div>
+      </div>
+
+      <!-- Task list -->
+      <ul class="task-list" id="taskList" aria-label="Task list"></ul>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState" hidden>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <p id="emptyMessage">A blank page. Write your first task above.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Delete confirmation dialog -->
+  <div class="modal-overlay" id="modalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle">Remove this task?</h2>
+      <p id="modalBody">You can undo this from the toast right after.</p>
+      <div class="modal-actions">
+        <button id="modalCancel" class="text-btn" type="button">Cancel</button>
+        <button id="modalConfirm" class="btn-danger" type="button">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
